@@ -22,19 +22,26 @@ app.get('/api/projects', (req, res) => {
 });
 
 // Initialization
-const startServer = async () => {
+const init = async () => {
   try {
     await kb.initialize();
-    app.listen(PORT, () => {
-      console.log(`\n========================================`);
-      console.log(`🤖 CHETHIYA'S AI ASSISTANT ONLINE`);
-      console.log(`📡 Deployment: http://localhost:${PORT}`);
-      console.log(`📁 Knowledge Base: ${kb.getAllProjects().length} projects loaded`);
-      console.log(`========================================\n`);
-    });
   } catch (err) {
-    console.error("Critical Failure during Jarvis ignition:", err);
+    console.error("Knowledge Base failed to load:", err);
   }
 };
 
-startServer();
+init();
+
+// Export the app for Vercel
+module.exports = app;
+
+// Only start the server locally if not in a serverless environment
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`\n========================================`);
+    console.log(`🤖 CHETHIYA'S AI ASSISTANT ONLINE`);
+    console.log(`📡 Deployment: http://localhost:${PORT}`);
+    console.log(`📁 Knowledge Base initialized`);
+    console.log(`========================================\n`);
+  });
+}
