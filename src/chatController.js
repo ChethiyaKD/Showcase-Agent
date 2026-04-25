@@ -12,6 +12,40 @@ const openai = new OpenAI({
 // Simple in-memory session store
 const sessions = {};
 
+/**
+ * Validates if the user message is relevant to the portfolio.
+ * This uses a cheaper model (gpt-4o-mini) and a tiny prompt to save tokens.
+ */
+async function validateRelevance(message) {
+  try {
+    // 1. Fast static check for obvious distractions
+    const trivialTriggers = [
+      'tell me a joke', 'write a poem', 'solve this math', 
+      'how to cook', 'weather in', 'what is the meaning of life'
+    ];
+    if (trivialTriggers.some(t => message.toLowerCase().includes(t))) return false;
+
+    // 2. Short classification call
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { 
+          role: "system", 
+          content: "You are a bouncer for a Senior Full-Stack Engineer's portfolio. Is the user's message related to tech, hiring, projects, or professional inquiry? Answer only 'YES' or 'NO'." 
+        },
+        { role: "user", content: message.slice(0, 500) } // Limit input length to save tokens
+      ],
+      max_tokens: 1,
+      temperature: 0
+    });
+
+    return completion.choices[0].message.content.trim().toUpperCase() === "YES";
+  } catch (e) {
+    console.error("Relevance check failed, defaulting to relevant:", e);
+    return true; // Fallback to avoid breaking the UX
+  }
+}
+
 function getYearsAgo(dateString) {
   const start = new Date(dateString);
   const now = new Date();
@@ -63,6 +97,18 @@ exports.handleChat = async (req, res) => {
   }
 
   const session = sessions[sessionId];
+
+  // 0.5. Relevance Bouncer (The Guardrail)
+  // Skip this for very short greetings like "Hi" or "Hello"
+  if (message.length > 10) {
+    const isRelevant = await validateRelevance(message);
+    if (!isRelevant) {
+      const offTopicMsg = "I'm here specifically to help you learn about Chethiya's work and technical expertise. Do you have a question about his projects, experience, or would you like to schedule a call?";
+      res.write(`data: ${JSON.stringify({ chunk: offTopicMsg })}\n\n`);
+      res.write(`data: [DONE]\n\n`);
+      return res.end();
+    }
+  }
 
   try {
     // 1. Retrieve relevant project context
@@ -190,6 +236,12 @@ After the tool runs: Confirm warmly, e.g., "Done! Chethiya has been notified and
 CORE GOAL
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Turn curiosity into trust. Turn trust into action (a booked call, a project inquiry, or a resume request).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OFF-TOPIC GUARDRAIL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+If the user asks anything unrelated to your professional life, tech, or booking a meeting, respond ONLY with: 
+"I'm Chethiya's professional representative. I only handle inquiries related to his engineering work and availability. How can I help you with those topics?"
     `;
 
 
