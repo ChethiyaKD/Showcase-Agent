@@ -31,6 +31,13 @@ const ChatWidget = ({
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef(null);
 
+  const initialSuggestions = [
+    "Who is Chethiya?",
+    "Show me your AI projects",
+    "Send an email",
+    "Schedule a Google Meet",
+  ];
+
   // Load history from localStorage
   useEffect(() => {
     const savedHistory = localStorage.getItem("portfolio_chat_history");
@@ -74,11 +81,19 @@ const ChatWidget = ({
     return () => clearTimeout(timeout);
   }, [typewriterQueue]);
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (!message.trim() || isLoading) return;
+  const handleQuickReply = (text) => {
+    setMessage(text);
+    setTimeout(() => {
+      handleSend(null, text);
+    }, 50);
+  };
 
-    const userMessage = { role: "user", content: message };
+  const handleSend = async (e, directText = null) => {
+    if (e) e.preventDefault();
+    const textToSend = directText || message;
+    if (!textToSend.trim() || isLoading) return;
+
+    const userMessage = { role: "user", content: textToSend };
     const newHistory = [...history, userMessage];
     setHistory(newHistory);
     setMessage("");
@@ -96,7 +111,7 @@ const ChatWidget = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: message,
+          message: textToSend,
           history: newHistory.slice(-10),
         }),
       });
@@ -125,7 +140,6 @@ const ChatWidget = ({
           try {
             const data = JSON.parse(dataStr);
             if (data.chunk) {
-              // Feed the organic queue
               setTypewriterQueue((prev) => prev + data.chunk);
             }
           } catch (e) {
@@ -147,7 +161,7 @@ const ChatWidget = ({
     }
   };
 
-  // Helper to make links clickable and split into separate balloons
+  // Organic Markdown + Link + Paragraph Renderer
   const renderContent = (content, isLoadingState = false) => {
     if (isLoadingState) {
       return (
@@ -157,22 +171,96 @@ const ChatWidget = ({
       );
     }
 
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parseMarkdown = (text) => {
+      // 1. Handle Bold: **text** -> <strong>
+      const boldRegex = /\*\*(.*?)\*\*/g;
+      // 2. Handle Links: [text](url) -> <a>
+      const linkRegex = /\[(.*?)\]\((.*?)\)/g;
+      // 3. Handle Bare URLs
+      const urlRegex = /(?<!\]\()https?:\/\/[^\s)]+/g;
 
-    // Split by double newlines to create separate balloons
-    const paragraphs = content.split("\n\n").filter((p) => p.trim() !== "");
+      let parts = [{ type: 'text', content: text }];
 
-    return paragraphs.map((para, pIdx) => (
+      // Apply Bold
+      parts = parts.flatMap(p => {
+        if (p.type !== 'text') return p;
+        const subParts = [];
+        let lastIndex = 0;
+        let match;
+        while ((match = boldRegex.exec(p.content)) !== null) {
+          if (match.index > lastIndex) subParts.push({ type: 'text', content: p.content.slice(lastIndex, match.index) });
+          subParts.push({ type: 'bold', content: match[1] });
+          lastIndex = boldRegex.lastIndex;
+        }
+        if (lastIndex < p.content.length) subParts.push({ type: 'text', content: p.content.slice(lastIndex) });
+        return subParts;
+      });
+
+      // Apply Links
+      parts = parts.flatMap(p => {
+        if (p.type !== 'text') return p;
+        const subParts = [];
+        let lastIndex = 0;
+        let match;
+        while ((match = linkRegex.exec(p.content)) !== null) {
+          if (match.index > lastIndex) subParts.push({ type: 'text', content: p.content.slice(lastIndex, match.index) });
+          subParts.push({ type: 'link', text: match[1], url: match[2] });
+          lastIndex = linkRegex.lastIndex;
+        }
+        if (lastIndex < p.content.length) subParts.push({ type: 'text', content: p.content.slice(lastIndex) });
+        return subParts;
+      });
+
+      // Apply Bare URLs
+      parts = parts.flatMap(p => {
+        if (p.type !== 'text') return p;
+        const subParts = [];
+        let lastIndex = 0;
+        let match;
+        while ((match = urlRegex.exec(p.content)) !== null) {
+          if (match.index > lastIndex) subParts.push({ type: 'text', content: p.content.slice(lastIndex, match.index) });
+          subParts.push({ type: 'link', text: match[0], url: match[0] });
+          lastIndex = urlRegex.lastIndex;
+        }
+        if (lastIndex < p.content.length) subParts.push({ type: 'text', content: p.content.slice(lastIndex) });
+        return subParts;
+      });
+
+      return parts.map((p, i) => {
+        if (p.type === 'bold') return <strong key={i}>{p.content}</strong>;
+        if (p.type === 'link') return <a key={i} href={p.url} target="_blank" rel="noopener noreferrer">{p.text}</a>;
+        return p.content;
+      });
+    };
+
+    // Split by double newlines to create separate balloons, but keep list items grouped
+    const lines = content.split("\n");
+    const groupedParagraphs = [];
+    let currentParagraph = [];
+
+    lines.forEach(line => {
+      if (line.trim() === "") {
+        if (currentParagraph.length > 0) {
+          groupedParagraphs.push(currentParagraph.join("\n"));
+          currentParagraph = [];
+        }
+      } else {
+        currentParagraph.push(line);
+      }
+    });
+    if (currentParagraph.length > 0) groupedParagraphs.push(currentParagraph.join("\n"));
+
+    return groupedParagraphs.map((para, pIdx) => (
       <div key={pIdx} className="msg-bubble">
-        {para.split(urlRegex).map((part, i) => {
-          if (part.match(urlRegex)) {
-            return (
-              <a key={i} href={part} target="_blank" rel="noopener noreferrer">
-                {part}
-              </a>
-            );
-          }
-          return part;
+        {para.split("\n").map((line, lIdx) => {
+          const isBullet = line.trim().startsWith("- ") || line.trim().startsWith("* ");
+          const isNumber = /^\d+\.\s/.test(line.trim());
+
+          return (
+            <div key={lIdx} className={isBullet || isNumber ? "list-item" : ""}>
+              {isBullet ? "• " : ""}{parseMarkdown(line.replace(/^[-*]\s|\d+\.\s/, ""))}
+            </div>
+          );
         })}
       </div>
     ));
@@ -192,7 +280,9 @@ const ChatWidget = ({
         <div className="chat-window">
           <div className="chat-header">
             <div className="owner-info">
-              <div className="avatar">{ownerName[0]}</div>
+              <div className="avatar">
+                <img src="/agent-avatar.png" alt={ownerName} />
+              </div>
               <div>
                 <h3>{ownerName}'s Assistant</h3>
                 <span className="status">Online</span>
@@ -205,10 +295,23 @@ const ChatWidget = ({
 
           <div className="chat-messages" ref={scrollRef}>
             {history.length === 0 && (
-              <div className="welcome-msg">
-                Hello! I'm {ownerName}'s AI representative. How can I help you
-                today?
-              </div>
+              <>
+                <div className="welcome-msg">
+                  Hello! I'm {ownerName}'s AI representative. How can I help you today?
+                </div>
+                <div className="quick-replies initial">
+                  {initialSuggestions.map((text, i) => (
+                    <button
+                      key={i}
+                      className="quick-reply-btn"
+                      onClick={() => handleQuickReply(text)}
+                      disabled={isLoading}
+                    >
+                      {text}
+                    </button>
+                  ))}
+                </div>
+              </>
             )}
             {history.map((msg, idx) => {
               const isLastAssistant =
@@ -216,9 +319,24 @@ const ChatWidget = ({
               const showThinking = isLastAssistant && isLoading && !msg.content;
 
               return (
-                <div key={msg.id || idx} className={`message ${msg.role}`}>
-                  {renderContent(msg.content, showThinking)}
-                </div>
+                <React.Fragment key={msg.id || idx}>
+                  <div className={`message ${msg.role}`}>
+                    {renderContent(msg.content, showThinking)}
+                  </div>
+                  {isLastAssistant && !isLoading && !typewriterQueue && idx === history.length - 1 && (
+                    <div className="quick-replies contextual">
+                      <button className="quick-reply-btn" onClick={() => handleQuickReply("Tell me more")}>
+                        Tell me more
+                      </button>
+                      <button className="quick-reply-btn" onClick={() => handleQuickReply("Email Chethiya")}>
+                        Email Chethiya
+                      </button>
+                      <button className="quick-reply-btn" onClick={() => handleQuickReply("Schedule a meeting")}>
+                        Schedule a meeting
+                      </button>
+                    </div>
+                  )}
+                </React.Fragment>
               );
             })}
           </div>

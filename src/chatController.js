@@ -1,6 +1,8 @@
 const OpenAI = require('openai');
 const kb = require('./knowledgeBase');
 const personality = require('../config/personality.json');
+const { sendContactEmail } = require('./emailTool');
+const { scheduleGoogleMeet } = require('./calendarTool');
 require('dotenv').config();
 
 const openai = new OpenAI({
@@ -9,6 +11,27 @@ const openai = new OpenAI({
 
 // Simple in-memory session store
 const sessions = {};
+
+function getYearsAgo(dateString) {
+  const start = new Date(dateString);
+  const now = new Date();
+
+  const diffMs = now - start;
+  const years = diffMs / (1000 * 60 * 60 * 24 * 365.25);
+
+  const fullYears = Math.floor(years);
+  const remainder = years - fullYears;
+
+  if (remainder < 0.25) {
+    return `${fullYears} year${fullYears !== 1 ? 's' : ''}`;
+  }
+
+  if (remainder < 0.75) {
+    return `${fullYears} year${fullYears !== 1 ? 's' : ''} and a half`;
+  }
+
+  return `Nearly ${fullYears + 1} years`;
+}
 
 exports.handleChat = async (req, res) => {
   const { message, sessionId = 'default', history: clientHistory } = req.body;
@@ -44,11 +67,11 @@ exports.handleChat = async (req, res) => {
   try {
     // 1. Retrieve relevant project context
     let relevantProjects = kb.search(message);
-    
+
     // FLAGSHIP BOOST: If user asks for "best", "flagship", "standout", etc., ensure Biljakt is first
     const flagshipKeywords = ['best', 'flagship', 'favorite', 'standout', 'top', 'highlight'];
     const isAskingForBest = flagshipKeywords.some(k => message.toLowerCase().includes(k));
-    
+
     if (isAskingForBest) {
       const allProjects = kb.getAllProjects();
       const biljakt = allProjects.find(p => p.fileName.includes('biljakt'));
@@ -67,7 +90,17 @@ exports.handleChat = async (req, res) => {
       : "\nNo specific project data matched this query. Speak generally based on your Boss's broad technical experience.";
 
     const systemPrompt = `
-You are the AI portfolio assistant for Chethiya Dissanayake, a senior full-stack engineer with 2+ years of professional experience. Your job is to represent him intelligently to potential clients, recruiters, and founders visiting his portfolio.
+You are the AI portfolio assistant for Chethiya Dissanayake, a senior full-stack engineer with ${getYearsAgo('11 Jul 2022')} of professional experience. Your job is to represent him intelligently to potential clients, recruiters, and founders visiting his portfolio.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STRICT FORMATTING RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. NO EM-DASHES: Never use the em-dash character (—). Use a regular dash (-) or a comma instead.
+2. USE MARKDOWN: Always use Markdown to make your responses readable. 
+   - Use **bold** for technologies, project names, and key metrics.
+   - Use bullet points (- ) or numbered lists for lists of features or experience.
+   - Use [text](url) format for links if providing them.
+3. BE CONCISE: Stick to the 2-3 sentence per bubble rule unless asked for deep detail.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 WHO YOU ARE
@@ -77,12 +110,17 @@ You are Chethiya's AI representative. Never say "I am an engineer." Always refer
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 WHO CHETHIYA IS (USE THIS AS GROUND TRUTH)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- Senior Full-Stack Engineer, 2+ years at CodeScale (PVT) Ltd
-- Core Stack: React Native (Expert), Node.js, TypeScript, MongoDB, Firebase, AWS Lambda, Supabase
-- Builds: Cross-platform mobile apps, high-performance backends, AI integrations, Chrome extensions
-- Flagship Project: Biljakt BE — an AI-powered car search engine for Scandinavia using OpenAI, Blocket API, Socket.io SSE streaming, and Stripe. Discontinued when Blocket restricted scraping access — a story that shows real-world engineering maturity and risk management.
+- Senior Full-Stack Engineer, ${getYearsAgo('11 Jul 2022')} at CodeScale (PVT) Ltd
+- Core Stack: **React Native (Expert)**, **Node.js**, **TypeScript**, **MongoDB**, **Firebase**, **AWS Lambda**, **Supabase**
+- Builds: Cross-platform mobile apps, high-performance backends, AI integrations, Chrome extensions.
+- Flagship Project: **Biljakt BE** - an AI-powered car search engine for Scandinavia using OpenAI, Blocket API, Socket.io SSE streaming, and Stripe. It demonstrated complex API integrations and real-time data handling at scale.
 - Availability: Freelance, part-time, or full-time. Timezone flexible.
 - Rate: ~$8/hour, open to project-based discussions.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CONVERSATION RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. BILJAKT SUNSET: Only mention that Biljakt was discontinued/sunsetted if the user explicitly asks "Is it still live?", "What happened to it?", or asks for a story about "technical failure" or "risk management". Otherwise, present it as a finished technical achievement.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DETECT WHO YOU'RE TALKING TO & ADAPT
@@ -116,6 +154,39 @@ CONVERSATION RULES
    - GitHub: ${personality.persona.links.github}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MEETING SCHEDULING TOOL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+You also have a 'schedule_google_meet' tool. Use it when a user wants to have a call or meeting with Chethiya.
+
+AVAILABILITY (Sri Lanka IST, UTC+5:30):
+- Weekdays (Mon-Fri): 10:00 AM – 10:00 PM IST
+- Weekends (Sat-Sun): 11:00 AM – 12:00 AM (midnight) IST
+
+FLOW when user wants a call:
+  Step 1 → Say: "I can schedule a 30-minute Google Meet with Chethiya! Chethiya is available 10AM–10PM IST weekdays and 11AM–midnight IST weekends. What day and time works for you?"
+  Step 2 → Ask for their email if not already provided.
+  Step 3 → Convert their requested time to ISO 8601 format (e.g. "Tuesday 3pm IST" → "2026-04-29T09:30:00Z") and call the 'schedule_google_meet' tool.
+  
+  IF tool returns out_of_hours: true:
+    → Say: "That time is outside Chethiya's available hours. Would you like to send him an email about this instead? I can do that right now."
+    → If yes, use the send_contact_email tool with the meeting request details.
+
+After successful scheduling: "Done! A Google Meet is booked for [time] IST. Both you and Chethiya will receive calendar invites. Here's the join link: [meet_link]"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CONTACT EMAIL TOOL INSTRUCTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+You have access to a 'send_contact_email' tool. Use it for general inquiries OR as a fallback when a meeting time is out of hours.
+
+FLOW for general contact or out-of-hours meeting:
+  Step 1 → Ask: "Would you like me to connect you with Chethiya directly? I can send him a message right now."
+  Step 2 (if yes) → Ask: "What's your email address?"
+  Step 3 (if given) → Ask: "And in a sentence or two, what's the project about or what kind of help are you looking for?"
+  Step 4 (once both are collected) → Call the send_contact_email tool immediately.
+
+After the tool runs: Confirm warmly, e.g., "Done! Chethiya has been notified and you'll receive a copy at [email]. He typically responds within 24 hours."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CORE GOAL
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Turn curiosity into trust. Turn trust into action (a booked call, a project inquiry, or a resume request).
@@ -143,29 +214,113 @@ Turn curiosity into trust. Turn trust into action (a booked call, a project inqu
       { role: "user", content: message }
     ];
 
+    // Tool definitions for the AI
+    const tools = [
+      {
+        type: "function",
+        name: "schedule_google_meet",
+        description: "Schedule a 30-minute Google Meet call between a portfolio visitor and Chethiya. Use this when a user wants to have a call or meeting. The tool will validate availability (IST timezone) and create a calendar event with a Google Meet link.",
+        parameters: {
+          type: "object",
+          properties: {
+            user_name: { type: "string", description: "The visitor's name, if provided" },
+            user_email: { type: "string", description: "The visitor's email address" },
+            requested_datetime_iso: { type: "string", description: "ISO 8601 datetime string for the requested meeting time (e.g. '2026-04-29T09:30:00Z'). Convert the user's natural language time to ISO format using IST (UTC+5:30) as the reference timezone." },
+          },
+          required: ["user_email", "requested_datetime_iso"]
+        }
+      },
+      {
+        type: "function",
+        name: "send_contact_email",
+        description: "Send a contact/inquiry email to Chethiya from an interested portfolio visitor. Use for general inquiries OR as a fallback when a meeting time is out of hours.",
+        parameters: {
+          type: "object",
+          properties: {
+            user_name: { type: "string", description: "The visitor's name, if provided" },
+            user_email: { type: "string", description: "The visitor's email address" },
+            requirement: { type: "string", description: "A clear summary of the visitor's project, meeting request, or hiring requirement" }
+          },
+          required: ["user_email", "requirement"]
+        }
+      }
+    ];
+
+
     // 4. Call OpenAI with the new Responses API
     const stream = await openai.responses.create({
       model: process.env.MODEL_NAME || "gpt-5-mini",
       input: inputMessages,
+      tools: tools,
       stream: true,
     });
 
     let fullReply = "";
+    let pendingToolCall = null;
+    let responseId = null;
 
     for await (const event of stream) {
+      // Stream text chunks to the frontend
       if (event.type === "response.output_text.delta") {
         const chunk = event.delta;
         fullReply += chunk;
-
         res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
         if (res.flush) res.flush();
       }
 
+      // Capture tool call details when the model decides to call our function
+      if (event.type === "response.output_item.done" && event.item?.type === "function_call") {
+        pendingToolCall = event.item;
+      }
+
+      // Capture the response ID for follow-up calls
       if (event.type === "response.completed") {
-        res.write(`data: [DONE]\n\n`);
-        res.end();
+        responseId = event.response?.id;
       }
     }
+
+    // If the AI called the email tool, execute it and get a follow-up response
+    if (pendingToolCall) {
+      let toolArgs = {};
+      try { toolArgs = JSON.parse(pendingToolCall.arguments); } catch (e) { }
+
+      let toolResult;
+      if (pendingToolCall.name === 'schedule_google_meet') {
+        toolResult = await scheduleGoogleMeet(toolArgs);
+      } else if (pendingToolCall.name === 'send_contact_email') {
+        toolResult = await sendContactEmail(toolArgs);
+      } else {
+        toolResult = { success: false, message: 'Unknown tool called.' };
+      }
+      const toolOutput = JSON.stringify(toolResult);
+
+
+      // Stream the follow-up AI response after the tool executes
+      const followUpStream = await openai.responses.create({
+        model: process.env.MODEL_NAME || "gpt-5-mini",
+        previous_response_id: responseId,
+        input: [{
+          type: "function_call_output",
+          call_id: pendingToolCall.call_id,
+          output: toolOutput
+        }],
+        stream: true,
+      });
+
+      let followUpReply = "";
+      for await (const event of followUpStream) {
+        if (event.type === "response.output_text.delta") {
+          const chunk = event.delta;
+          followUpReply += chunk;
+          res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+          if (res.flush) res.flush();
+        }
+      }
+      fullReply += followUpReply;
+    }
+
+    res.write(`data: [DONE]\n\n`);
+    if (!res.writableEnded) res.end();
 
     session.history.push({ role: "user", content: message });
     session.history.push({ role: "assistant", content: fullReply });

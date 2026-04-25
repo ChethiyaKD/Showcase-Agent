@@ -12,6 +12,8 @@
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
     "flexsearch": "^0.7.43",
+    "googleapis": "^171.4.0",
+    "nodemailer": "^8.0.6",
     "openai": "^4.104.0"
   },
   "packageManager": "yarn@4.14.1"
