@@ -22,7 +22,7 @@ const ThinkingBrain = () => (
 );
 
 const ChatWidget = ({
-  endpoint = "http://localhost:3000/api/chat",
+  endpoint = "https://portfolio-agent-five.vercel.app/api/chat",
   ownerName = "Chethiya",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -179,56 +179,76 @@ const ChatWidget = ({
       // 3. Handle Bare URLs
       const urlRegex = /(?<!\]\()https?:\/\/[^\s)]+/g;
 
-      let parts = [{ type: 'text', content: text }];
+      let parts = [{ type: "text", content: text }];
 
       // Apply Bold
-      parts = parts.flatMap(p => {
-        if (p.type !== 'text') return p;
+      parts = parts.flatMap((p) => {
+        if (p.type !== "text") return p;
         const subParts = [];
         let lastIndex = 0;
         let match;
         while ((match = boldRegex.exec(p.content)) !== null) {
-          if (match.index > lastIndex) subParts.push({ type: 'text', content: p.content.slice(lastIndex, match.index) });
-          subParts.push({ type: 'bold', content: match[1] });
+          if (match.index > lastIndex)
+            subParts.push({
+              type: "text",
+              content: p.content.slice(lastIndex, match.index),
+            });
+          subParts.push({ type: "bold", content: match[1] });
           lastIndex = boldRegex.lastIndex;
         }
-        if (lastIndex < p.content.length) subParts.push({ type: 'text', content: p.content.slice(lastIndex) });
+        if (lastIndex < p.content.length)
+          subParts.push({ type: "text", content: p.content.slice(lastIndex) });
         return subParts;
       });
 
       // Apply Links
-      parts = parts.flatMap(p => {
-        if (p.type !== 'text') return p;
+      parts = parts.flatMap((p) => {
+        if (p.type !== "text") return p;
         const subParts = [];
         let lastIndex = 0;
         let match;
         while ((match = linkRegex.exec(p.content)) !== null) {
-          if (match.index > lastIndex) subParts.push({ type: 'text', content: p.content.slice(lastIndex, match.index) });
-          subParts.push({ type: 'link', text: match[1], url: match[2] });
+          if (match.index > lastIndex)
+            subParts.push({
+              type: "text",
+              content: p.content.slice(lastIndex, match.index),
+            });
+          subParts.push({ type: "link", text: match[1], url: match[2] });
           lastIndex = linkRegex.lastIndex;
         }
-        if (lastIndex < p.content.length) subParts.push({ type: 'text', content: p.content.slice(lastIndex) });
+        if (lastIndex < p.content.length)
+          subParts.push({ type: "text", content: p.content.slice(lastIndex) });
         return subParts;
       });
 
       // Apply Bare URLs
-      parts = parts.flatMap(p => {
-        if (p.type !== 'text') return p;
+      parts = parts.flatMap((p) => {
+        if (p.type !== "text") return p;
         const subParts = [];
         let lastIndex = 0;
         let match;
         while ((match = urlRegex.exec(p.content)) !== null) {
-          if (match.index > lastIndex) subParts.push({ type: 'text', content: p.content.slice(lastIndex, match.index) });
-          subParts.push({ type: 'link', text: match[0], url: match[0] });
+          if (match.index > lastIndex)
+            subParts.push({
+              type: "text",
+              content: p.content.slice(lastIndex, match.index),
+            });
+          subParts.push({ type: "link", text: match[0], url: match[0] });
           lastIndex = urlRegex.lastIndex;
         }
-        if (lastIndex < p.content.length) subParts.push({ type: 'text', content: p.content.slice(lastIndex) });
+        if (lastIndex < p.content.length)
+          subParts.push({ type: "text", content: p.content.slice(lastIndex) });
         return subParts;
       });
 
       return parts.map((p, i) => {
-        if (p.type === 'bold') return <strong key={i}>{p.content}</strong>;
-        if (p.type === 'link') return <a key={i} href={p.url} target="_blank" rel="noopener noreferrer">{p.text}</a>;
+        if (p.type === "bold") return <strong key={i}>{p.content}</strong>;
+        if (p.type === "link")
+          return (
+            <a key={i} href={p.url} target="_blank" rel="noopener noreferrer">
+              {p.text}
+            </a>
+          );
         return p.content;
       });
     };
@@ -238,7 +258,7 @@ const ChatWidget = ({
     const groupedParagraphs = [];
     let currentParagraph = [];
 
-    lines.forEach(line => {
+    lines.forEach((line) => {
       if (line.trim() === "") {
         if (currentParagraph.length > 0) {
           groupedParagraphs.push(currentParagraph.join("\n"));
@@ -248,17 +268,20 @@ const ChatWidget = ({
         currentParagraph.push(line);
       }
     });
-    if (currentParagraph.length > 0) groupedParagraphs.push(currentParagraph.join("\n"));
+    if (currentParagraph.length > 0)
+      groupedParagraphs.push(currentParagraph.join("\n"));
 
     return groupedParagraphs.map((para, pIdx) => (
       <div key={pIdx} className="msg-bubble">
         {para.split("\n").map((line, lIdx) => {
-          const isBullet = line.trim().startsWith("- ") || line.trim().startsWith("* ");
+          const isBullet =
+            line.trim().startsWith("- ") || line.trim().startsWith("* ");
           const isNumber = /^\d+\.\s/.test(line.trim());
 
           return (
             <div key={lIdx} className={isBullet || isNumber ? "list-item" : ""}>
-              {isBullet ? "• " : ""}{parseMarkdown(line.replace(/^[-*]\s|\d+\.\s/, ""))}
+              {isBullet ? "• " : ""}
+              {parseMarkdown(line.replace(/^[-*]\s|\d+\.\s/, ""))}
             </div>
           );
         })}
@@ -269,92 +292,88 @@ const ChatWidget = ({
   return (
     <div className={`chat-widget-container ${isOpen ? "open" : ""}`}>
       {/* Toggle Button */}
-      {!isOpen && (
-        <button className="chat-toggle" onClick={() => setIsOpen(true)}>
-          <MessageSquare size={24} />
-        </button>
-      )}
+      <button className="chat-toggle" onClick={() => setIsOpen(true)}>
+        <img src="/agent-avatar.png" alt="Open Chat" className="toggle-avatar" />
+      </button>
 
       {/* Chat Window */}
-      {isOpen && (
-        <div className="chat-window">
-          <div className="chat-header">
-            <div className="owner-info">
-              <div className="avatar">
-                <img src="/agent-avatar.png" alt={ownerName} />
-              </div>
-              <div>
-                <h3>{ownerName}'s Assistant</h3>
-                <span className="status">Online</span>
-              </div>
+      <div className="chat-window">
+        <div className="chat-header">
+          <div className="owner-info">
+            <div className="avatar">
+              <img src="/agent-avatar.png" alt={ownerName} />
             </div>
-            <button className="close-btn" onClick={() => setIsOpen(false)}>
-              <X size={20} />
-            </button>
+            <div>
+              <h3>{ownerName}'s Assistant</h3>
+              <span className="status">Online</span>
+            </div>
           </div>
-
-          <div className="chat-messages" ref={scrollRef}>
-            {history.length === 0 && (
-              <>
-                <div className="welcome-msg">
-                  Hello! I'm {ownerName}'s AI representative. How can I help you today?
-                </div>
-                <div className="quick-replies initial">
-                  {initialSuggestions.map((text, i) => (
-                    <button
-                      key={i}
-                      className="quick-reply-btn"
-                      onClick={() => handleQuickReply(text)}
-                      disabled={isLoading}
-                    >
-                      {text}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-            {history.map((msg, idx) => {
-              const isLastAssistant =
-                idx === history.length - 1 && msg.role === "assistant";
-              const showThinking = isLastAssistant && isLoading && !msg.content;
-
-              return (
-                <React.Fragment key={msg.id || idx}>
-                  <div className={`message ${msg.role}`}>
-                    {renderContent(msg.content, showThinking)}
-                  </div>
-                  {isLastAssistant && !isLoading && !typewriterQueue && idx === history.length - 1 && (
-                    <div className="quick-replies contextual">
-                      <button className="quick-reply-btn" onClick={() => handleQuickReply("Tell me more")}>
-                        Tell me more
-                      </button>
-                      <button className="quick-reply-btn" onClick={() => handleQuickReply("Email Chethiya")}>
-                        Email Chethiya
-                      </button>
-                      <button className="quick-reply-btn" onClick={() => handleQuickReply("Schedule a meeting")}>
-                        Schedule a meeting
-                      </button>
-                    </div>
-                  )}
-                </React.Fragment>
-              );
-            })}
-          </div>
-
-          <form className="chat-input" onSubmit={handleSend}>
-            <input
-              type="text"
-              placeholder="Type a message..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              disabled={isLoading}
-            />
-            <button type="submit" disabled={isLoading || !message.trim()}>
-              <Send size={18} />
-            </button>
-          </form>
+          <button className="close-btn" onClick={() => setIsOpen(false)}>
+            <X size={20} />
+          </button>
         </div>
-      )}
+
+        <div className="chat-messages" ref={scrollRef}>
+          {history.length === 0 && (
+            <>
+              <div className="welcome-msg">
+                Hello! I'm {ownerName}'s AI representative. How can I help you today?
+              </div>
+              <div className="quick-replies initial">
+                {initialSuggestions.map((text, i) => (
+                  <button
+                    key={i}
+                    className="quick-reply-btn"
+                    onClick={() => handleQuickReply(text)}
+                    disabled={isLoading}
+                  >
+                    {text}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          {history.map((msg, idx) => {
+            const isLastAssistant =
+              idx === history.length - 1 && msg.role === "assistant";
+            const showThinking = isLastAssistant && isLoading && !msg.content;
+
+            return (
+              <React.Fragment key={msg.id || idx}>
+                <div className={`message ${msg.role}`}>
+                  {renderContent(msg.content, showThinking)}
+                </div>
+                {isLastAssistant && !isLoading && !typewriterQueue && idx === history.length - 1 && (
+                  <div className="quick-replies contextual">
+                    <button className="quick-reply-btn" onClick={() => handleQuickReply("Tell me more")}>
+                      Tell me more
+                    </button>
+                    <button className="quick-reply-btn" onClick={() => handleQuickReply("Email Chethiya")}>
+                      Email Chethiya
+                    </button>
+                    <button className="quick-reply-btn" onClick={() => handleQuickReply("Schedule a meeting")}>
+                      Schedule a meeting
+                    </button>
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+
+        <form className="chat-input" onSubmit={handleSend}>
+          <input
+            type="text"
+            placeholder="Type a message..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            disabled={isLoading}
+          />
+          <button type="submit" disabled={isLoading || !message.trim()}>
+            <Send size={18} />
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

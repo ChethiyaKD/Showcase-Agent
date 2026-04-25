@@ -239,9 +239,11 @@ Turn curiosity into trust. Turn trust into action (a booked call, a project inqu
           properties: {
             user_name: { type: "string", description: "The visitor's name, if provided" },
             user_email: { type: "string", description: "The visitor's email address" },
-            requirement: { type: "string", description: "A clear summary of the visitor's project, meeting request, or hiring requirement" }
+            requirement: { type: "string", description: "A clear summary of the visitor's project, meeting request, or hiring requirement" },
+            lead_score: { type: "integer", description: "Qualitative score 1-10 based on visitor's professional intent (Founder/Recruiter = 8-10, Peer/Inquiry = 1-5)" },
+            lead_category: { type: "string", description: "One word categorization: Founder, Recruiter, Client, Student, or Peer" }
           },
-          required: ["user_email", "requirement"]
+          required: ["user_email", "requirement", "lead_score", "lead_category"]
         }
       }
     ];

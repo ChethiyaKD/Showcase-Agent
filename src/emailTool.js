@@ -7,9 +7,11 @@ require('dotenv').config();
  * @param {string} params.user_email - The visitor's email address
  * @param {string} params.user_name  - The visitor's name (optional)
  * @param {string} params.requirement - A summary of their project/hiring need
+ * @param {number} params.lead_score - AI determined score 1-10
+ * @param {string} params.lead_category - AI determined category (Founder, Recruiter, etc)
  * @returns {object} { success: boolean, message: string }
  */
-async function sendContactEmail({ user_email, user_name, requirement }) {
+async function sendContactEmail({ user_email, user_name, requirement, lead_score, lead_category }) {
   try {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -27,32 +29,43 @@ async function sendContactEmail({ user_email, user_name, requirement }) {
       to: 'chethiyakdis@gmail.com',
       cc: user_email,
       replyTo: replyTo,
-      subject: `📬 New Lead from Portfolio: ${senderName}`,
+      subject: `🚀 ${lead_category || 'New Lead'}: ${senderName} (${lead_score || '?'}/10)`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #f9f9f9; border-radius: 12px;">
-          <h2 style="color: #6d28d9;">🚀 New Contact from Your Portfolio</h2>
-          <p style="color: #444;">Someone reached out through your AI portfolio assistant.</p>
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 16px;">
+          <h2 style="color: #4f46e5; margin-top: 0; font-size: 24px;">New Lead Intelligence</h2>
+          
+          <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+            <div style="background: #f5f3ff; padding: 12px 20px; border-radius: 12px; border: 1px solid #ddd6fe;">
+              <div style="color: #6d28d9; font-size: 10px; font-weight: bold; text-transform: uppercase;">Lead Score</div>
+              <div style="color: #4c1d95; font-size: 18px; font-weight: bold;">${lead_score || 'N/A'}/10</div>
+            </div>
+            <div style="background: #f0fdf4; padding: 12px 20px; border-radius: 12px; border: 1px solid #bbf7d0;">
+              <div style="color: #166534; font-size: 10px; font-weight: bold; text-transform: uppercase;">Category</div>
+              <div style="color: #14532d; font-size: 18px; font-weight: bold;">${lead_category || 'General'}</div>
+            </div>
+          </div>
 
-          <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+          <table style="width: 100%; border-collapse: collapse;">
             <tr>
-              <td style="padding: 10px; font-weight: bold; color: #555; width: 130px;">Name</td>
-              <td style="padding: 10px; color: #222;">${senderName}</td>
-            </tr>
-            <tr style="background: #fff;">
-              <td style="padding: 10px; font-weight: bold; color: #555;">Email</td>
-              <td style="padding: 10px; color: #222;"><a href="mailto:${user_email}">${user_email}</a></td>
+              <td style="padding: 12px 0; border-bottom: 1px solid #f3f4f6; color: #6b7280; width: 100px;">Name</td>
+              <td style="padding: 12px 0; border-bottom: 1px solid #f3f4f6; color: #111827; font-weight: 500;">${senderName}</td>
             </tr>
             <tr>
-              <td style="padding: 10px; font-weight: bold; color: #555; vertical-align: top;">Requirement</td>
-              <td style="padding: 10px; color: #222; white-space: pre-wrap;">${requirement}</td>
+              <td style="padding: 12px 0; border-bottom: 1px solid #f3f4f6; color: #6b7280;">Email</td>
+              <td style="padding: 12px 0; border-bottom: 1px solid #f3f4f6; color: #111827; font-weight: 500;">${user_email}</td>
             </tr>
           </table>
 
-          <div style="margin-top: 24px; padding: 16px; background: #ede9fe; border-radius: 8px; color: #4c1d95;">
-            <strong>Reply directly</strong> to this email to reach ${senderName} at ${user_email}.
+          <div style="margin-top: 24px;">
+            <div style="color: #6b7280; font-size: 10px; font-weight: bold; text-transform: uppercase; margin-bottom: 8px;">Visitor Requirement</div>
+            <div style="background: #f9fafb; padding: 16px; border-radius: 12px; color: #374151; line-height: 1.6; border-left: 4px solid #4f46e5;">
+              ${requirement.replace(/\n/g, '<br>')}
+            </div>
           </div>
 
-          <p style="color: #999; font-size: 12px; margin-top: 24px;">Sent by Chethiya's AI Portfolio Assistant</p>
+          <p style="color: #9ca3af; font-size: 12px; margin-top: 32px; text-align: center;">
+            This lead was qualified by your AI Portfolio Assistant.
+          </p>
         </div>
       `,
     };
