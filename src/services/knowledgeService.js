@@ -18,7 +18,7 @@ class KnowledgeBase {
   async initialize() {
     if (this.isInitialized) return;
 
-    const knowledgePath = path.join(__dirname, '../../knowledge');
+    const knowledgePath = path.join(__dirname, '../knowledge');
     if (!fs.existsSync(knowledgePath)) {
       console.warn("Knowledge directory not found.");
       return;

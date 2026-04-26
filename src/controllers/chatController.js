@@ -1,16 +1,8 @@
 const OpenAI = require('openai');
-const kb = require('../services/knowledgeService');
-
-let personality;
-try {
-  personality = require('../../config/personality.json');
-} catch (e) {
-  console.warn("⚠️ personality.json not found, falling back to sample.");
-  personality = require('../../config/personality.sample.json');
-}
-
-const { sendContactEmail } = require('../services/emailService');
-const { scheduleGoogleMeet } = require('../services/calendarService');
+const kb = require('./knowledgeBase');
+const personality = require('../config/personality.json');
+const { sendContactEmail } = require('./emailTool');
+const { scheduleGoogleMeet } = require('./calendarTool');
 require('dotenv').config();
 
 const openai = new OpenAI({

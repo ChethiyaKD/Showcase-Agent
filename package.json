@@ -2,10 +2,10 @@
   "name": "portfolio-agent",
   "version": "1.0.0",
   "description": "Jarvis-style Portfolio Chat Agent",
-  "main": "src/app.js",
+  "main": "src/index.js",
   "scripts": {
-    "start": "node src/app.js",
-    "dev": "nodemon src/app.js"
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
   },
   "dependencies": {
     "cors": "^2.8.6",
