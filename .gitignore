@@ -1,11 +1,11 @@
 node_modules
 .env
 */node_modules
-portfolio-widget/node_modules
+widget/node_modules
 
 # Dependencies
 node_modules/
-portfolio-widget/node_modules/
+widget/node_modules/
 
 # Environment variables
 .env
@@ -23,6 +23,12 @@ yarn-debug.log*
 .svelte-kit/
 dist/
 build/
+
+# Private Data
+knowledge/
+!knowledge/sample_project.md
+config/personality.json
+config/google-service-account.json
 
 # IDEs
 .vscode/
