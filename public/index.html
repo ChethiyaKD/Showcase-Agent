@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARVIS - Portfolio Assistant</title>
+    <style>
+        :root {
+            --glow-color: #00d4ff;
+            --bg-dark: #0a0e14;
+            --panel-bg: rgba(0, 212, 255, 0.05);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--glow-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #jarvis-container {
+            width: 80%;
+            max-width: 800px;
+            height: 70vh;
+            border: 1px solid var(--glow-color);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+            background: var(--panel-bg);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            position: relative;
+        }
+
+        header {
+            border-bottom: 1px solid var(--glow-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-light {
+            width: 10px;
+            height: 10px;
+            background-color: var(--glow-color);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--glow-color);
+            animation: pulse 2s infinite;
+        }
+
+        #chat-window {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 10px;
+        }
+
+        #chat-window::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        #chat-window::-webkit-scrollbar-thumb {
+            background: var(--glow-color);
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-left: 2px solid transparent;
+        }
+
+        .user-message {
+            border-left: 2px solid #fff;
+            color: #fff;
+        }
+
+        .jarvis-message {
+            border-left: 2px solid var(--glow-color);
+            background: rgba(0, 212, 255, 0.03);
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex-grow: 1;
+            background: transparent;
+            border: 1px solid var(--glow-color);
+            color: var(--glow-color);
+            padding: 10px;
+            outline: none;
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid var(--glow-color);
+            color: var(--glow-color);
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: var(--glow-color);
+            color: var(--bg-dark);
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+
+        .typing-indicator {
+            font-size: 0.8em;
+            font-style: italic;
+            margin-bottom: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="jarvis-container">
+        <header>
+            <div>JARVIS INTERFACE v5.0</div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                SYSTEM ONLINE <div class="status-light"></div>
+            </div>
+        </header>
+        
+        <div id="chat-window">
+            <div class="message jarvis-message">Welcome back, Sir. All systems are operational. The knowledge base containing 73 projects is loaded. How may I assist you?</div>
+        </div>
+
+        <div id="typing" class="typing-indicator">Jarvis is processing...</div>
+
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Enter query..." autocomplete="off">
+            <button id="send-btn">SEND</button>
+        </div>
+    </div>
+
+    <script>
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const typing = document.getElementById('typing');
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // Add user message
+            appendMessage('Sir', message, 'user-message');
+            userInput.value = '';
+
+            // Show typing
+            typing.style.display = 'block';
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                const data = await response.json();
+                
+                typing.style.display = 'none';
+                appendMessage('Jarvis', data.reply, 'jarvis-message');
+            } catch (err) {
+                typing.style.display = 'none';
+                appendMessage('System', 'Connection to Jarvis has been disrupted.', 'jarvis-message');
+            }
+        }
+
+        function appendMessage(sender, text, className) {
+            const div = document.createElement('div');
+            div.className = `message ${className}`;
+            div.innerHTML = `<strong>${sender}:</strong> ${text}`;
+            chatWindow.appendChild(div);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
