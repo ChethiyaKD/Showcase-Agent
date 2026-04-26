@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 /**
- * Sends a contact email to Chethiya from a portfolio visitor.
+ * Sends a contact email to the owner of the portfolio from a visitor.
  * @param {object} params
  * @param {string} params.user_email - The visitor's email address
  * @param {string} params.user_name  - The visitor's name (optional)
@@ -25,8 +25,8 @@ async function sendContactEmail({ user_email, user_name, requirement, lead_score
     const replyTo = user_email;
 
     const mailOptions = {
-      from: `"Chethiya's Portfolio Agent" <${process.env.EMAIL_USER}>`,
-      to: 'chethiyakdis@gmail.com',
+      from: `"${process.env.OWNER_FIRST_NAME.toUpperCase()}'s Portfolio Agent" <${process.env.EMAIL_USER}>`,
+      to: process.env.OWNER_EMAIL,
       cc: user_email,
       replyTo: replyTo,
       subject: `🚀 ${lead_category || 'New Lead'}: ${senderName} (${lead_score || '?'}/10)`,
@@ -72,11 +72,11 @@ async function sendContactEmail({ user_email, user_name, requirement, lead_score
 
     await transporter.sendMail(mailOptions);
     console.log(`✅ Contact email sent for ${senderName} (${user_email})`);
-    return { success: true, message: `Email sent successfully to Chethiya. He'll be in touch soon at ${user_email}!` };
+    return { success: true, message: `Email sent successfully to ${process.env.OWNER_FIRST_NAME}. He'll be in touch soon at ${user_email}!` };
 
   } catch (error) {
     console.error('❌ Email sending failed:', error.message);
-    return { success: false, message: 'Failed to send the email. Please try again or contact Chethiya directly at chethiyakdis@gmail.com.' };
+    return { success: false, message: `Failed to send the email. Please try again or contact ${process.env.OWNER_FIRST_NAME} directly at ${process.env.OWNER_EMAIL}.` };
   }
 }
 

@@ -5,7 +5,7 @@
  * Steps:
  *  1. Make sure GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are in .env
  *  2. Run:  node scratch/get_google_token.js
- *  3. Your browser will open automatically — sign in with chethiyakdis@gmail.com
+ *  3. Your browser will open automatically — sign in with [EMAIL_ADDRESS]
  *  4. The refresh token will be printed automatically in the terminal
  *  5. Copy it into .env as GOOGLE_REFRESH_TOKEN=...
  */
@@ -15,10 +15,10 @@ const http = require('http');
 const url = require('url');
 require('dotenv').config();
 
-const CLIENT_ID     = process.env.GOOGLE_CLIENT_ID;
+const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI  = 'http://localhost:3333/callback';
-const PORT          = 3333;
+const REDIRECT_URI = 'http://localhost:3333/callback';
+const PORT = 3333;
 
 if (!CLIENT_ID || !CLIENT_SECRET) {
   console.error('❌ Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET in .env');
@@ -34,7 +34,7 @@ const authUrl = oAuth2Client.generateAuthUrl({
 });
 
 console.log('\n🔗 Opening browser for Google authorization...');
-console.log('   Sign in with: chethiyakdis@gmail.com\n');
+console.log('   Sign in with: [EMAIL_ADDRESS]\n');
 
 // Open the browser automatically
 const { exec } = require('child_process');

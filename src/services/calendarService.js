@@ -5,7 +5,7 @@ require('dotenv').config();
 
 // ─── Availability Configuration (IST = UTC+5:30) ──────────────────────────────
 const IST_OFFSET_MINUTES = 330;
-const CHETHIYA_EMAIL = 'chethiyakdis@gmail.com';
+const OWNER_EMAIL = process.env.OWNER_EMAIL;
 
 const AVAILABILITY = {
   weekday: { start: 10, end: 22 },    // 10:00 AM – 10:00 PM IST (Mon-Fri)
@@ -42,23 +42,23 @@ function checkAvailability(startISO) {
   return {
     available,
     istTimeStr,
-    reason: available ? null : `Chethiya is available ${isWeekend ? '11AM–midnight' : '10AM–10PM'} IST on ${isWeekend ? 'weekends' : 'weekdays'}.`,
+    reason: available ? null : `${process.env.OWNER_FIRST_NAME} is available ${isWeekend ? '11AM–midnight' : '10AM–10PM'} IST on ${isWeekend ? 'weekends' : 'weekdays'}.`,
   };
 }
 
 /**
  * Creates a Google Calendar event with Google Meet, then emails the link
- * to both Chethiya and the user (bypasses Domain-Wide Delegation restriction).
+ * to both ${process.env.OWNER_FIRST_NAME} and the user (bypasses Domain-Wide Delegation restriction).
  */
 async function scheduleGoogleMeet({ user_email, user_name, requested_datetime_iso }) {
   try {
     // 1. Check availability
     const { available, istTimeStr, reason } = checkAvailability(requested_datetime_iso);
     if (!available) {
-      return { success: false, out_of_hours: true, requested_time: istTimeStr, message: `That time (${istTimeStr}) is outside Chethiya's available hours. ${reason}` };
+      return { success: false, out_of_hours: true, requested_time: istTimeStr, message: `That time (${istTimeStr}) is outside ${process.env.OWNER_FIRST_NAME}'s available hours. ${reason}` };
     }
 
-    // 2. Authenticate with OAuth2 using Chethiya's stored refresh token
+    // 2. Authenticate with OAuth2 using ${process.env.OWNER_FIRST_NAME}'s stored refresh token
     //    This allows conferenceData (Google Meet) to work on a personal Gmail account.
     const oAuth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
@@ -73,15 +73,15 @@ async function scheduleGoogleMeet({ user_email, user_name, requested_datetime_is
     const senderName = user_name || 'Portfolio Visitor';
 
     const event = {
-      summary: `📞 Chethiya × ${senderName} — Portfolio Call`,
+      summary: `📞 ${process.env.OWNER_FIRST_NAME} × ${senderName} — Portfolio Call`,
       description: [
         `30-minute portfolio inquiry call.`,
         `Guest: ${senderName} (${user_email})`,
         ``,
-        `Scheduled via Chethiya's AI Portfolio Assistant.`,
+        `Scheduled via ${process.env.OWNER_FIRST_NAME}'s AI Portfolio Assistant.`,
       ].join('\n'),
       start: { dateTime: startTime.toISOString(), timeZone: 'Asia/Colombo' },
-      end:   { dateTime: endTime.toISOString(),   timeZone: 'Asia/Colombo' },
+      end: { dateTime: endTime.toISOString(), timeZone: 'Asia/Colombo' },
       // No attendees field — send emails manually via nodemailer
       conferenceData: {
         createRequest: {
@@ -128,7 +128,7 @@ async function scheduleGoogleMeet({ user_email, user_name, requested_datetime_is
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #f9f9f9; border-radius: 12px;">
         <h2 style="color: #6d28d9;">📅 Google Meet Scheduled!</h2>
-        <p style="color: #444;">A 30-minute call has been booked via Chethiya's AI Portfolio Assistant.</p>
+        <p style="color: #444;">A 30-minute call has been booked via ${process.env.OWNER_FIRST_NAME}'s AI Portfolio Assistant.</p>
         <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
           <tr><td style="padding: 10px; font-weight: bold; color: #555; width: 130px;">Guest</td><td style="padding: 10px; color: #222;">${senderName} (${user_email})</td></tr>
           <tr style="background:#fff;"><td style="padding: 10px; font-weight: bold; color: #555;">Time</td><td style="padding: 10px; color: #222;">${istTimeStr}</td></tr>
@@ -142,26 +142,26 @@ async function scheduleGoogleMeet({ user_email, user_name, requested_datetime_is
             📅 View Calendar Event
           </a>
         </div>
-        <p style="color: #999; font-size: 12px; margin-top: 24px;">Sent by Chethiya's AI Portfolio Assistant</p>
+        <p style="color: #999; font-size: 12px; margin-top: 24px;">Sent by ${process.env.OWNER_FIRST_NAME}'s AI Portfolio Assistant</p>
       </div>
     `;
 
     await transporter.sendMail({
-      from: `"Chethiya's Portfolio Agent" <${process.env.EMAIL_USER}>`,
-      to: CHETHIYA_EMAIL,
+      from: `"${process.env.OWNER_FIRST_NAME}'s Portfolio Agent" <${process.env.EMAIL_USER}>`,
+      to: OWNER_EMAIL,
       cc: user_email,
       subject: `📅 Google Meet Booked: ${senderName} — ${istTimeStr}`,
       html: emailHtml,
     });
 
-    console.log(`✅ Meeting emails sent to ${CHETHIYA_EMAIL} and ${user_email}`);
+    console.log(`✅ Meeting emails sent to ${OWNER_EMAIL} and ${user_email}`);
 
     return {
       success: true,
       meet_link: meetLink,
       event_link: eventLink,
       scheduled_time: istTimeStr,
-      message: `Google Meet scheduled for ${istTimeStr}! Both you (${user_email}) and Chethiya will receive an email with the join link: ${meetLink}`,
+      message: `Google Meet scheduled for ${istTimeStr}! Both you (${user_email}) and ${process.env.OWNER_FIRST_NAME} will receive an email with the join link: ${meetLink}`,
     };
 
   } catch (error) {

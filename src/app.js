@@ -39,7 +39,7 @@ module.exports = app;
 if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`\n========================================`);
-    console.log(`🤖 CHETHIYA'S AI ASSISTANT ONLINE`);
+    console.log(`🤖 ${process.env.OWNER_FIRST_NAME.toUpperCase()}'S AI ASSISTANT ONLINE`);
     console.log(`📡 Deployment: http://localhost:${PORT}`);
     console.log(`📁 Knowledge Base initialized`);
     console.log(`========================================\n`);

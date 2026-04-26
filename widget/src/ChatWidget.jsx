@@ -23,7 +23,7 @@ const ThinkingBrain = () => (
 
 const ChatWidget = ({
   endpoint = "https://portfolio-agent-five.vercel.app/api/chat",
-  ownerName = "Chethiya",
+  ownerName = "YOUR NAME",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
@@ -32,7 +32,7 @@ const ChatWidget = ({
   const scrollRef = useRef(null);
 
   const initialSuggestions = [
-    "Who is Chethiya?",
+    "Who is YOUR NAME?",
     "Show me your AI projects",
     "Send an email",
     "Schedule a Google Meet",
@@ -293,7 +293,11 @@ const ChatWidget = ({
     <div className={`chat-widget-container ${isOpen ? "open" : ""}`}>
       {/* Toggle Button */}
       <button className="chat-toggle" onClick={() => setIsOpen(true)}>
-        <img src="/agent-avatar.png" alt="Open Chat" className="toggle-avatar" />
+        <img
+          src="/agent-avatar.png"
+          alt="Open Chat"
+          className="toggle-avatar"
+        />
       </button>
 
       {/* Chat Window */}
@@ -317,7 +321,8 @@ const ChatWidget = ({
           {history.length === 0 && (
             <>
               <div className="welcome-msg">
-                Hello! I'm {ownerName}'s AI representative. How can I help you today?
+                Hello! I'm {ownerName}'s AI representative. How can I help you
+                today?
               </div>
               <div className="quick-replies initial">
                 {initialSuggestions.map((text, i) => (
@@ -343,19 +348,31 @@ const ChatWidget = ({
                 <div className={`message ${msg.role}`}>
                   {renderContent(msg.content, showThinking)}
                 </div>
-                {isLastAssistant && !isLoading && !typewriterQueue && idx === history.length - 1 && (
-                  <div className="quick-replies contextual">
-                    <button className="quick-reply-btn" onClick={() => handleQuickReply("Tell me more")}>
-                      Tell me more
-                    </button>
-                    <button className="quick-reply-btn" onClick={() => handleQuickReply("Email Chethiya")}>
-                      Email Chethiya
-                    </button>
-                    <button className="quick-reply-btn" onClick={() => handleQuickReply("Schedule a meeting")}>
-                      Schedule a meeting
-                    </button>
-                  </div>
-                )}
+                {isLastAssistant &&
+                  !isLoading &&
+                  !typewriterQueue &&
+                  idx === history.length - 1 && (
+                    <div className="quick-replies contextual">
+                      <button
+                        className="quick-reply-btn"
+                        onClick={() => handleQuickReply("Tell me more")}
+                      >
+                        Tell me more
+                      </button>
+                      <button
+                        className="quick-reply-btn"
+                        onClick={() => handleQuickReply("Email YOUR NAME")}
+                      >
+                        Email YOUR NAME
+                      </button>
+                      <button
+                        className="quick-reply-btn"
+                        onClick={() => handleQuickReply("Schedule a meeting")}
+                      >
+                        Schedule a meeting
+                      </button>
+                    </div>
+                  )}
               </React.Fragment>
             );
           })}
