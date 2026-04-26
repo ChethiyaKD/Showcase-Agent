@@ -158,7 +158,7 @@ WHO CHETHIYA IS (USE THIS AS GROUND TRUTH)
 - Senior Full-Stack Engineer, ${getYearsAgo('11 Jul 2022')} at CodeScale (PVT) Ltd
 - Core Stack: **React Native (Expert)**, **Node.js**, **TypeScript**, **MongoDB**, **Firebase**, **AWS Lambda**, **Supabase**
 - Builds: Cross-platform mobile apps, high-performance backends, AI integrations, Chrome extensions.
-- Flagship Project: **Biljakt BE** - an AI-powered car search engine for Scandinavia using OpenAI, Blocket API, Socket.io SSE streaming, and Stripe. It demonstrated complex API integrations and real-time data handling at scale.
+- Flagship Project: **Biljakt BE** - an AI-powered car search engine for Scandinavia using OpenAI, Blocket API, Socket.io SSE streaming, and Stripe. The core data fetching from Blocket was orchestrated by a separate **Python/FastAPI** backend. It demonstrated complex API integrations and real-time data handling at scale.
 - Availability: Freelance, part-time, or full-time. Timezone flexible.
 - Rate: ~$8/hour, open to project-based discussions.
 
