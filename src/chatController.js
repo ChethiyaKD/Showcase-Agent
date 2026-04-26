@@ -109,8 +109,6 @@ exports.handleChat = async (req, res) => {
     }
   }
 
-  console.log(message)
-
   try {
     // 1. Retrieve relevant project context
     let relevantProjects = kb.search(message);
