@@ -5,6 +5,8 @@ Showcase Agent is a professional AI-driven bridge between developers and their a
 ![Showcase Agent Banner](https://img.shields.io/badge/AI-Portfolio_Agent-6366f1?style=for-the-badge&logo=openai)
 ![Stack](https://img.shields.io/badge/Stack-Node.js_|_React_|_OpenAI-blue?style=for-the-badge)
 
+[**🌐 Live Demo**](https://chethiya.me)
+
 ---
 
 ## 🌟 Key Features
