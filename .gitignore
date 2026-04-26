@@ -24,11 +24,6 @@ yarn-debug.log*
 dist/
 build/
 
-# Private Data
-knowledge/
-config/personality.json
-config/google-service-account.json
-
 # IDEs
 .vscode/
 .idea/
