@@ -50,9 +50,17 @@ yarn install
 ### 2. Configuration
 Create a `.env` file in the root based on the provided samples:
 ```env
-OPENAI_API_KEY=your_key
+PORT=3000
+OPENAI_API_KEY=your_openai_key
+MODEL_NAME=gpt-4o-mini
+
+# Google Calendar Integration
 GOOGLE_CLIENT_ID=your_id
 GOOGLE_CLIENT_SECRET=your_secret
+GOOGLE_REFRESH_TOKEN=your_refresh_token
+GOOGLE_CALENDAR_ID=primary
+
+# Email Notifications
 EMAIL_USER=your_email
 EMAIL_PASS=your_app_password
 ```
