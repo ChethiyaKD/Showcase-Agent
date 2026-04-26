@@ -1,8 +1,8 @@
 const OpenAI = require('openai');
-const kb = require('./knowledgeBase');
-const personality = require('../config/personality.json');
-const { sendContactEmail } = require('./emailTool');
-const { scheduleGoogleMeet } = require('./calendarTool');
+const kb = require('../services/knowledgeService');
+const personality = require('../../config/personality.json');
+const { sendContactEmail } = require('../services/emailService');
+const { scheduleGoogleMeet } = require('../services/calendarService');
 require('dotenv').config();
 
 const openai = new OpenAI({

@@ -893,20 +893,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"portfolio-agent@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "portfolio-agent@workspace:."
-  dependencies:
-    cors: "npm:^2.8.6"
-    dotenv: "npm:^16.6.1"
-    express: "npm:^4.22.1"
-    flexsearch: "npm:^0.7.43"
-    googleapis: "npm:^171.4.0"
-    nodemailer: "npm:^8.0.6"
-    openai: "npm:^4.104.0"
-  languageName: unknown
-  linkType: soft
-
 "proxy-addr@npm:~2.0.7":
   version: 2.0.7
   resolution: "proxy-addr@npm:2.0.7"
@@ -1007,6 +993,20 @@ __metadata:
   checksum: 10c0/68733173026766fa0d9ecaeb07f0483f4c2dc70ca376b3b7c40b7cda909f94b0918f6c5ad5ce27a9160bdfb475efaa9d5e705a11d8eaae18f9835d20976028bc
   languageName: node
   linkType: hard
+
+"showcase-agent@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "showcase-agent@workspace:."
+  dependencies:
+    cors: "npm:^2.8.6"
+    dotenv: "npm:^16.6.1"
+    express: "npm:^4.22.1"
+    flexsearch: "npm:^0.7.43"
+    googleapis: "npm:^171.4.0"
+    nodemailer: "npm:^8.0.6"
+    openai: "npm:^4.104.0"
+  languageName: unknown
+  linkType: soft
 
 "side-channel-list@npm:^1.0.0":
   version: 1.0.1
