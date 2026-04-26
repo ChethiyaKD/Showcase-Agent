@@ -20,23 +20,22 @@ async function validateRelevance(message) {
   try {
     // 1. Fast static check for obvious distractions
     const trivialTriggers = [
-      'tell me a joke', 'write a poem', 'solve this math', 
+      'tell me a joke', 'write a poem', 'solve this math',
       'how to cook', 'weather in', 'what is the meaning of life'
     ];
     if (trivialTriggers.some(t => message.toLowerCase().includes(t))) return false;
 
     // 2. Short classification call
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-5-nano",
       messages: [
-        { 
-          role: "system", 
-          content: "You are a bouncer for a Senior Full-Stack Engineer's portfolio. Is the user's message related to tech, hiring, projects, or professional inquiry? Answer only 'YES' or 'NO'." 
+        {
+          role: "system",
+          content: "You are a bouncer for a Senior Full-Stack Engineer's portfolio His name is Chethiya Kusal Dissanayake. Is the user's message related to tech, hiring, projects, or professional inquiry? Answer only 'YES' or 'NO'."
         },
-        { role: "user", content: message.slice(0, 500) } // Limit input length to save tokens
+        { role: "user", content: message } // Limit input length to save tokens
       ],
-      max_tokens: 1,
-      temperature: 0
+      max_completion_tokens: 1000,
     });
 
     return completion.choices[0].message.content.trim().toUpperCase() === "YES";
@@ -109,6 +108,8 @@ exports.handleChat = async (req, res) => {
       return res.end();
     }
   }
+
+  console.log(message)
 
   try {
     // 1. Retrieve relevant project context
